@@ -1,0 +1,14 @@
+.material-icons{
+    cursor: pointer;
+    -webkit-user-select:none; 
+    -moz-user-select:none; 
+    -ms-user-select:none; 
+    user-select:none
+}
+.material-icons-outlined{
+    cursor: pointer;
+    -webkit-user-select:none; 
+    -moz-user-select:none; 
+    -ms-user-select:none; 
+    user-select:none
+}

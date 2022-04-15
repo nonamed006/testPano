@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+	<title>Document</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+	<script src="https://pchen66.github.io/js/three/three.min.js"></script>
+	<script src="https://pchen66.github.io/js/panolens/panolens.min.js"></script>
+	<script src="https://pchen66.github.io/js/three/three.min.js"></script>
+	<script type="module">
+		// 이런식으로 하나하나 받아오기
+		var img = window.parent.document.getElementById('img').innerHTML;
+		var posotion = window.parent.document.getElementById('position').innerHTML;
+		var info_desc = window.parent.document.getElementById('info_desc').innerHTML;
+
+		var viewer = new PANOLENS.Viewer({
+			output: 'console',
+			cameraFov: 80,
+			autoHideInfospot: false,
+			autoRotate: true,
+			autoRotateSpeed: 0.3,
+			controlBar: false
+		});
+		var curves = [], easings = [];
+
+		curves = getPropertyArray(TWEEN.Easing);
+		// Focus tweening parameter
+		var parameters = {
+			duration: 1000,
+			curve: 'Exponential',
+			easing: 'Out',
+			iterative: false
+		};
+
+		// ===== ===== ===== 화면 이동 ===== ===== ===== 
+		var state = true;
+		let infospot2;
+		var autoKey = sessionStorage.getItem("autoKey");
+
+		document.getElementById('autoCon').addEventListener('click', function () {
+			state = !state;
+			//console.log(state);
+			// 
+			if (!state) {
+				viewer.OrbitControls.autoRotate = false;
+			} else {
+				viewer.OrbitControls.autoRotate = true;
+			}
+		})
+
+		// 바뀐 값이 실시간 반영 안된다...
+		if (autoKey == 'true') {
+			viewer.OrbitControls.autoRotate = true;
+		} else {
+			viewer.OrbitControls.autoRotate = false;
+		}
+		// ===== ===== ===== 화면 이동 ===== ===== ===== 
+
+		let panorama = new PANOLENS.ImagePanorama(img);
+
+		let infospot = new PANOLENS.Infospot(300, PANOLENS.DataImage.Info);
+		var x = posotion.split(',')[0];
+		var y = posotion.split(',')[1];
+		var z = posotion.split(',')[2];
+		infospot.position.set(x, y, z);
+		infospot.addHoverText(info_desc);
+		//infospot.addEventListener('click', onFocus);
+		panorama.add(infospot);
+
+		if(img == 'img1.jpg'){
+			infospot2 = new PANOLENS.Infospot(300, PANOLENS.DataImage.Info);
+			infospot2.position.set(841.10,-634.29,-4295.12);
+			infospot2.addHoverText('테스트 스팟');
+			panorama.add(infospot2);
+		}
+
+		viewer.getCamera().fov = 60;
+		viewer.getCamera().updateProjectionMatrix();
+		viewer.getControl().rotateSpeed *= -1;
+		viewer.getControl().momentumScalingFactor *= -1;
+		viewer.onWindowResize(window.innerWidth, window.innerHeight);
+		// 카메라 줌 레벨
+		viewer.setCameraFov(60);
+		viewer.reverseDraggingDirection();
+		viewer.renderer.sortObjects = true;
+		viewer.add(panorama);
+
+		// ===== ===== ===== 모달창 ===== ===== =====
+		function show() {
+        document.querySelector(".background").className = "background show";
+      }
+
+      function close() {
+        document.querySelector(".background").className = "background";
+      }
+
+
+		// ===== ===== ===== 모달 생성 ===== ===== =====
+
+		let tagArea = document.getElementById('addModal');
+
+		let showBtn = document.createElement('button');
+		showBtn.setAttribute('id', 'show');
+
+		let new_btn = document.createElement('div');
+		new_btn.setAttribute('class', 'background');
+
+		let new_div1 = document.createElement('div');
+		new_div1.setAttribute('class', 'window');
+
+		let new_div2 = document.createElement('div');
+		new_div2.setAttribute('class', 'popup');
+
+		let new_btn2 = document.createElement('span');
+		new_btn2.innerHTML = '✖';
+		new_btn2.setAttribute('id', 'close');
+		new_div2.innerHTML = '<b>'+info_desc+'</b> </br>';
+		new_div2.innerHTML += '</br>';
+		new_div2.innerHTML += 'Panolens를 이용한 VR투어,</br> React.js를 이용하여 SPA를 구현하였으며 MariaDB, Spring Boot를 이용하여 API 구축';
+
+
+
+		tagArea.appendChild(new_btn);
+		new_btn.appendChild(new_div1);
+		new_div1.appendChild(new_div2);
+		new_div2.appendChild(new_btn2);
+
+		if(img == 'img1.jpg'){
+		infospot2.addEventListener('click', show);
+		}
+		document.querySelector("#close").addEventListener("click", close);
+		// ===== ===== ===== 모달 생성 끝 ===== ===== =====
+
+		// 스팟 포커스
+		function getPropertyArray(object) {
+			var array = [];
+			for (var name in object) {
+				array.push(name);
+			}
+			return array;
+		}
+
+		function iterativeFocus(enabled) {
+			if (!enabled) {
+				clearTimeout(timerId);
+				return;
+			}
+			onFocus.call(panorama.children[index++]);
+			if (index === panorama.children.length) {
+				index = 0;
+			}
+			timerId = setTimeout(iterativeFocus.bind(this, enabled), parameters.duration + 500);
+		}
+		function onFocus() {
+			this.focus(parameters.duration, TWEEN.Easing[parameters.curve][parameters.easing]);
+		}
+	</script>
+		<div id="addModal"></div>
+	<div class="audiost">
+		<audio id='player' controls loop>
+			<source src='./bensound-anewbeginning.mp3' type='audio/mp3' />
+		</audio>
+		<div className='audioclass'>
+		</div>
+		<div>
+			<span class="material-icons-outlined" id="autoCon">
+				play_arrow
+			</span>
+		</div>
+	</div>
+</body>
+
+</html>
